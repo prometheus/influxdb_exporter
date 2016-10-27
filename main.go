@@ -17,6 +17,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"regexp"
@@ -31,6 +32,10 @@ import (
 	"github.com/influxdata/influxdb/models"
 )
 
+const (
+	MAX_UDP_PAYLOAD = 64 * 1024
+)
+
 var (
 	showVersion   = flag.Bool("version", false, "Print version information.")
 	listenAddress = flag.String("web.listen-address", ":9122", "Address on which to expose metrics and web interface.")
@@ -43,6 +48,10 @@ var (
 		},
 	)
 	invalidChars = regexp.MustCompile("[^a-zA-Z0-9_]")
+
+	// Udp
+	bindAddress = flag.String("udp.bind-address", ":8089", "Address on which to listen for udp packets.")
+	listenOnUdp = flag.Bool("udp.listen", false, "Listen on udp socket.")
 )
 
 type influxDBSample struct {
@@ -53,10 +62,40 @@ type influxDBSample struct {
 	Timestamp time.Time
 }
 
+func (c *influxDBCollector) serve() {
+	buf := make([]byte, MAX_UDP_PAYLOAD)
+	for {
+
+		select {
+		default:
+			n, _, err := c.conn.ReadFromUDP(buf)
+			if err != nil {
+				fmt.Printf("Failed to read UDP message: %s", err)
+				continue
+			}
+
+			bufCopy := make([]byte, n)
+			copy(bufCopy, buf[:n])
+
+			precision := "ns"
+			points, err := models.ParsePointsWithPrecision(bufCopy, time.Now().UTC(), precision)
+			if err != nil {
+				fmt.Printf("error parsing udp packet: %s", err)
+				return
+			}
+
+			c.parsePointsToSample(points)
+		}
+	}
+}
+
 type influxDBCollector struct {
 	samples map[string]*influxDBSample
 	mu      sync.Mutex
 	ch      chan *influxDBSample
+
+	// Udp
+	conn *net.UDPConn
 }
 
 func newInfluxDBCollector() *influxDBCollector {
@@ -86,6 +125,13 @@ func (c *influxDBCollector) influxDBPost(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	c.parsePointsToSample(points)
+
+	// InfluxDB returns a 204 on success.
+	http.Error(w, "", 204)
+}
+
+func (c *influxDBCollector) parsePointsToSample(points []models.Point) {
 	for _, s := range points {
 		for field, v := range s.Fields() {
 			var value float64
@@ -137,9 +183,6 @@ func (c *influxDBCollector) influxDBPost(w http.ResponseWriter, r *http.Request)
 			c.ch <- sample
 		}
 	}
-
-	// InfluxDB returns a 204 on success.
-	http.Error(w, "", 204)
 }
 
 func (c *influxDBCollector) processSamples() {
@@ -211,6 +254,23 @@ func main() {
 
 	c := newInfluxDBCollector()
 	prometheus.MustRegister(c)
+
+	if *listenOnUdp {
+		addr, err := net.ResolveUDPAddr("udp", *bindAddress)
+		if err != nil {
+			fmt.Printf("Failed to resolve UDP address %s: %s", *bindAddress, err)
+			os.Exit(1)
+		}
+
+		conn, err := net.ListenUDP("udp", addr)
+		if err != nil {
+			fmt.Printf("Failed to set up UDP listener at address %s: %s", addr, err)
+			os.Exit(1)
+		}
+
+		c.conn = conn
+		go c.serve()
+	}
 
 	http.HandleFunc("/write", c.influxDBPost)
 	// Some InfluxDB clients try to create a database.
