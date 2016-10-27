@@ -50,7 +50,7 @@ var (
 	invalidChars = regexp.MustCompile("[^a-zA-Z0-9_]")
 
 	// Udp
-	bindAddress = flag.String("udp.bind-address", ":8089", "Address on which to listen for udp packets.")
+	bindAddress = flag.String("udp.bind-address", ":9122", "Address on which to listen for udp packets.")
 	listenOnUdp = flag.Bool("udp.listen", false, "Listen on udp socket.")
 )
 
@@ -62,7 +62,7 @@ type influxDBSample struct {
 	Timestamp time.Time
 }
 
-func (c *influxDBCollector) serve() {
+func (c *influxDBCollector) serveUdp() {
 	buf := make([]byte, MAX_UDP_PAYLOAD)
 	for {
 
@@ -70,7 +70,7 @@ func (c *influxDBCollector) serve() {
 		default:
 			n, _, err := c.conn.ReadFromUDP(buf)
 			if err != nil {
-				fmt.Printf("Failed to read UDP message: %s", err)
+				log.Warnf("Failed to read UDP message: %s", err)
 				continue
 			}
 
@@ -80,7 +80,8 @@ func (c *influxDBCollector) serve() {
 			precision := "ns"
 			points, err := models.ParsePointsWithPrecision(bufCopy, time.Now().UTC(), precision)
 			if err != nil {
-				fmt.Printf("error parsing udp packet: %s", err)
+				log.Errorf("error parsing udp packet: %s", err)
+				c.udpParseErrors.Inc()
 				return
 			}
 
@@ -95,13 +96,19 @@ type influxDBCollector struct {
 	ch      chan *influxDBSample
 
 	// Udp
-	conn *net.UDPConn
+	conn           *net.UDPConn
+	udpParseErrors prometheus.Counter
 }
 
 func newInfluxDBCollector() *influxDBCollector {
 	c := &influxDBCollector{
 		ch:      make(chan *influxDBSample),
 		samples: map[string]*influxDBSample{},
+		udpParseErrors: prometheus.NewCounter(prometheus.CounterOpts{
+			Namespace: "influxdb",
+			Name:      "exporter_udp_parse_errors",
+			Help:      "Current total udp parse errors.",
+		}),
 	}
 	go c.processSamples()
 	return c
@@ -254,6 +261,7 @@ func main() {
 
 	c := newInfluxDBCollector()
 	prometheus.MustRegister(c)
+	prometheus.MustRegister(c.udpParseErrors)
 
 	if *listenOnUdp {
 		addr, err := net.ResolveUDPAddr("udp", *bindAddress)
@@ -269,7 +277,7 @@ func main() {
 		}
 
 		c.conn = conn
-		go c.serve()
+		go c.serveUdp()
 	}
 
 	http.HandleFunc("/write", c.influxDBPost)
