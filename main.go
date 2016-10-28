@@ -41,17 +41,20 @@ var (
 	listenAddress = flag.String("web.listen-address", ":9122", "Address on which to expose metrics and web interface.")
 	metricsPath   = flag.String("web.telemetry-path", "/metrics", "Path under which to expose Prometheus metrics.")
 	sampleExpiry  = flag.Duration("influxdb.sample-expiry", 5*time.Minute, "How long a sample is valid for.")
+	bindAddress   = flag.String("udp.bind-address", ":9122", "Address on which to listen for udp packets.")
 	lastPush      = prometheus.NewGauge(
 		prometheus.GaugeOpts{
 			Name: "influxdb_last_push_timestamp_seconds",
 			Help: "Unix timestamp of the last received influxdb metrics push in seconds.",
 		},
 	)
+	udpParseErrors = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "exporter_udp_parse_errors_total",
+			Help: "Current total udp parse errors.",
+		},
+	)
 	invalidChars = regexp.MustCompile("[^a-zA-Z0-9_]")
-
-	// Udp
-	bindAddress = flag.String("udp.bind-address", ":9122", "Address on which to listen for udp packets.")
-	listenOnUdp = flag.Bool("udp.listen", false, "Listen on udp socket.")
 )
 
 type influxDBSample struct {
@@ -81,7 +84,7 @@ func (c *influxDBCollector) serveUdp() {
 			points, err := models.ParsePointsWithPrecision(bufCopy, time.Now().UTC(), precision)
 			if err != nil {
 				log.Errorf("error parsing udp packet: %s", err)
-				c.udpParseErrors.Inc()
+				udpParseErrors.Inc()
 				return
 			}
 
@@ -96,19 +99,13 @@ type influxDBCollector struct {
 	ch      chan *influxDBSample
 
 	// Udp
-	conn           *net.UDPConn
-	udpParseErrors prometheus.Counter
+	conn *net.UDPConn
 }
 
 func newInfluxDBCollector() *influxDBCollector {
 	c := &influxDBCollector{
 		ch:      make(chan *influxDBSample),
 		samples: map[string]*influxDBSample{},
-		udpParseErrors: prometheus.NewCounter(prometheus.CounterOpts{
-			Namespace: "influxdb",
-			Name:      "exporter_udp_parse_errors",
-			Help:      "Current total udp parse errors.",
-		}),
 	}
 	go c.processSamples()
 	return c
@@ -246,6 +243,7 @@ func (c *influxDBCollector) Describe(ch chan<- *prometheus.Desc) {
 
 func init() {
 	prometheus.MustRegister(version.NewCollector("influxdb_exporter"))
+	prometheus.MustRegister(udpParseErrors)
 }
 
 func main() {
@@ -261,24 +259,21 @@ func main() {
 
 	c := newInfluxDBCollector()
 	prometheus.MustRegister(c)
-	prometheus.MustRegister(c.udpParseErrors)
 
-	if *listenOnUdp {
-		addr, err := net.ResolveUDPAddr("udp", *bindAddress)
-		if err != nil {
-			fmt.Printf("Failed to resolve UDP address %s: %s", *bindAddress, err)
-			os.Exit(1)
-		}
-
-		conn, err := net.ListenUDP("udp", addr)
-		if err != nil {
-			fmt.Printf("Failed to set up UDP listener at address %s: %s", addr, err)
-			os.Exit(1)
-		}
-
-		c.conn = conn
-		go c.serveUdp()
+	addr, err := net.ResolveUDPAddr("udp", *bindAddress)
+	if err != nil {
+		fmt.Printf("Failed to resolve UDP address %s: %s", *bindAddress, err)
+		os.Exit(1)
 	}
+
+	conn, err := net.ListenUDP("udp", addr)
+	if err != nil {
+		fmt.Printf("Failed to set up UDP listener at address %s: %s", addr, err)
+		os.Exit(1)
+	}
+
+	c.conn = conn
+	go c.serveUdp()
 
 	http.HandleFunc("/write", c.influxDBPost)
 	// Some InfluxDB clients try to create a database.
