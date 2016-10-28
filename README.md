@@ -19,6 +19,8 @@ as the [Node Exporter](https://github.com/prometheus/node_exporter).
 
 This exporter supports float, int and boolean fields. Tags are converted to Prometheus labels.
 
+The exporter also listens on a UDP socket, port 9122 by default.
+
 ## Example usage with Telegraf
 
 The influxdb_exporter appears as a normal InfluxDB server. To use with Telegraf
@@ -27,6 +29,12 @@ for example, put the following in your `telegraf.conf`:
 ```
 [[outputs.influxdb]]
   urls = ["http://localhost:9122"]
+```
+
+Or if you want to use UDP instead:
+```
+[[outputs.influxdb]]
+  urls = ["udp://localhost:9122"]
 ```
 
 Note that Telegraf already supports outputing Prometheus metrics over HTTP via

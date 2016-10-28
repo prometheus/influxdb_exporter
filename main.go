@@ -50,7 +50,7 @@ var (
 	)
 	udpParseErrors = prometheus.NewCounter(
 		prometheus.CounterOpts{
-			Name: "exporter_udp_parse_errors_total",
+			Name: "influxdb_udp_parse_errors_total",
 			Help: "Current total udp parse errors.",
 		},
 	)
