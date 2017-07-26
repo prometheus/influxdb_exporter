@@ -3,8 +3,10 @@ sudo: false
 language: go
 
 go:
-- 1.5.4
-- 1.6.2
+- 1.8.x
+- master
+
+go_import_path: github.com/prometheus/influxdb_exporter
 
 script:
 - make
