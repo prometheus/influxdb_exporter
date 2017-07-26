@@ -14,7 +14,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -24,6 +23,8 @@ import (
 	"sort"
 	"sync"
 	"time"
+
+	"gopkg.in/alecthomas/kingpin.v2"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -38,11 +39,10 @@ const (
 )
 
 var (
-	showVersion   = flag.Bool("version", false, "Print version information.")
-	listenAddress = flag.String("web.listen-address", ":9122", "Address on which to expose metrics and web interface.")
-	metricsPath   = flag.String("web.telemetry-path", "/metrics", "Path under which to expose Prometheus metrics.")
-	sampleExpiry  = flag.Duration("influxdb.sample-expiry", 5*time.Minute, "How long a sample is valid for.")
-	bindAddress   = flag.String("udp.bind-address", ":9122", "Address on which to listen for udp packets.")
+	listenAddress = kingpin.Flag("web.listen-address", "Address on which to expose metrics and web interface.").Default(":9122").String()
+	metricsPath   = kingpin.Flag("web.telemetry-path", "Path under which to expose Prometheus metrics.").Default("/metrics").String()
+	sampleExpiry  = kingpin.Flag("influxdb.sample-expiry", "How long a sample is valid for.").Default("5m").Duration()
+	bindAddress   = kingpin.Flag("udp.bind-address", "Address on which to listen for udp packets.").Default(":9122").String()
 	lastPush      = prometheus.NewGauge(
 		prometheus.GaugeOpts{
 			Name: "influxdb_last_push_timestamp_seconds",
@@ -248,12 +248,9 @@ func init() {
 }
 
 func main() {
-	flag.Parse()
-
-	if *showVersion {
-		fmt.Fprintln(os.Stdout, version.Print("influxdb_exporter"))
-		os.Exit(0)
-	}
+	kingpin.Version(version.Print("influxdb_exporter"))
+	kingpin.HelpFlag.Short('h')
+	kingpin.Parse()
 
 	log.Infoln("Starting influxdb_exporter", version.Info())
 	log.Infoln("Build context", version.BuildContext())
