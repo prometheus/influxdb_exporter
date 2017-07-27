@@ -33,14 +33,20 @@
 			"revisionTime": "2017-07-12T04:22:13Z"
 		},
 		{
+			"checksumSHA1": "+XUWLdQoAv/6blNS1qVV/rnJYHM=",
 			"path": "github.com/influxdata/influxdb/models",
-			"revision": "e3fef5593c21644f2b43af55d6e17e70910b0e48",
-			"revisionTime": "2016-03-01T19:03:21-07:00"
+			"revision": "5887e92e8950435ac7e496ff8dada784051284b7",
+			"revisionTime": "2017-07-20T16:04:16Z",
+			"version": "v1.3.1",
+			"versionExact": "v1.3.1"
 		},
 		{
+			"checksumSHA1": "H/J/qLqzUONXIecHHKtVZmxJZZA=",
 			"path": "github.com/influxdata/influxdb/pkg/escape",
-			"revision": "e3fef5593c21644f2b43af55d6e17e70910b0e48",
-			"revisionTime": "2016-03-01T19:03:21-07:00"
+			"revision": "5887e92e8950435ac7e496ff8dada784051284b7",
+			"revisionTime": "2017-07-20T16:04:16Z",
+			"version": "v1.3.1",
+			"versionExact": "v1.3.1"
 		},
 		{
 			"checksumSHA1": "bKMZjd2wPw13VwoE7mBeSv5djFA=",
