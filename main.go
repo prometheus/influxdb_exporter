@@ -138,7 +138,12 @@ func (c *influxDBCollector) influxDBPost(w http.ResponseWriter, r *http.Request)
 
 func (c *influxDBCollector) parsePointsToSample(points []models.Point) {
 	for _, s := range points {
-		for field, v := range s.Fields() {
+		fields, err := s.Fields()
+		if err != nil {
+			log.Errorf("error getting fields from point: %s", err)
+			continue
+		}
+		for field, v := range fields {
 			var value float64
 			switch v := v.(type) {
 			case float64:
@@ -157,7 +162,7 @@ func (c *influxDBCollector) parsePointsToSample(points []models.Point) {
 
 			var name string
 			if field == "value" {
-				name = s.Name()
+				name = string(s.Name())
 			} else {
 				name = fmt.Sprintf("%s_%s", s.Name(), field)
 			}
@@ -168,8 +173,8 @@ func (c *influxDBCollector) parsePointsToSample(points []models.Point) {
 				Value:     value,
 				Labels:    map[string]string{},
 			}
-			for k, v := range s.Tags() {
-				sample.Labels[invalidChars.ReplaceAllString(k, "_")] = v
+			for _, v := range s.Tags() {
+				sample.Labels[invalidChars.ReplaceAllString(string(v.Key), "_")] = string(v.Value)
 			}
 
 			// Calculate a consistent unique ID for the sample.
