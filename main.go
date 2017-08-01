@@ -43,8 +43,6 @@ var (
 	metricsPath   = kingpin.Flag("web.telemetry-path", "Path under which to expose Prometheus metrics.").Default("/metrics").String()
 	sampleExpiry  = kingpin.Flag("influxdb.sample-expiry", "How long a sample is valid for.").Default("5m").Duration()
 	bindAddress   = kingpin.Flag("udp.bind-address", "Address on which to listen for udp packets.").Default(":9122").String()
-	logLevel      = kingpin.Flag("log.level", "Only log messages with the given severity or above. One of: [debug, info, warn, error, fatal]").Default("info").String()
-	logFormat     = kingpin.Flag("log.format", `Set the log target and format. Example: "logger:syslog?appname=bob&local=7" or "logger:stdout?json=true"`).Default("logger:stderr").String()
 	lastPush      = prometheus.NewGauge(
 		prometheus.GaugeOpts{
 			Name: "influxdb_last_push_timestamp_seconds",
@@ -250,12 +248,10 @@ func init() {
 }
 
 func main() {
+	log.AddFlags(kingpin.CommandLine)
 	kingpin.Version(version.Print("influxdb_exporter"))
 	kingpin.HelpFlag.Short('h')
 	kingpin.Parse()
-
-	log.Base().SetLevel(*logLevel)
-	log.Base().SetLevel(*logFormat)
 
 	log.Infoln("Starting influxdb_exporter", version.Info())
 	log.Infoln("Build context", version.BuildContext())
