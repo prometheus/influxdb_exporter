@@ -63,6 +63,7 @@ type influxDBSample struct {
 	Name      string
 	Labels    map[string]string
 	Value     float64
+	Kind      prometheus.ValueType
 	Timestamp time.Time
 }
 
@@ -138,6 +139,7 @@ func (c *influxDBCollector) influxDBPost(w http.ResponseWriter, r *http.Request)
 
 func (c *influxDBCollector) parsePointsToSample(points []models.Point) {
 	for _, s := range points {
+
 		fields, err := s.Fields()
 		if err != nil {
 			log.Errorf("error getting fields from point: %s", err)
@@ -172,9 +174,21 @@ func (c *influxDBCollector) parsePointsToSample(points []models.Point) {
 				Timestamp: s.Time(),
 				Value:     value,
 				Labels:    map[string]string{},
+				Kind:      prometheus.UntypedValue,
 			}
 			for _, v := range s.Tags() {
 				sample.Labels[invalidChars.ReplaceAllString(string(v.Key), "_")] = string(v.Value)
+
+				if string(v.Key) == "kind" {
+					switch string(v.Value) {
+					case "counter":
+						sample.Kind = prometheus.CounterValue
+					case "gauge":
+						sample.Kind = prometheus.GaugeValue
+					default:
+						sample.Kind = prometheus.UntypedValue
+					}
+				}
 			}
 
 			// Calculate a consistent unique ID for the sample.
@@ -236,7 +250,7 @@ func (c *influxDBCollector) Collect(ch chan<- prometheus.Metric) {
 		}
 		ch <- prometheus.MustNewConstMetric(
 			prometheus.NewDesc(sample.Name, "InfluxDB Metric", []string{}, sample.Labels),
-			prometheus.UntypedValue,
+			sample.Kind,
 			sample.Value,
 		)
 	}
