@@ -204,7 +204,6 @@ func (c *influxDBCollector) parsePointsToSample(points []models.Point) {
 			}
 			sample.ID = fmt.Sprintf("%q", parts)
 
-			fmt.Printf("Sample Kind: %s\n", sample.Kind)
 			c.ch <- sample
 		}
 	}
