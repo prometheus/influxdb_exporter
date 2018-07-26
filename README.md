@@ -14,7 +14,7 @@ This exporter supports float, int and boolean fields. Tags are converted to Prom
 It's possible to change the Prometheus type (counter/gauge/untyped) through Influx line protocol tags. See below for a sample REST API call. Be sure to change the time within the default 5m window, or the time range chosen! Time is Unix time in nanoseconds and is the last field.
 
 ```bash
-curl -XPOST "http://localhost:9122/write" -d 'cpu,host=server02,kind=gauge,region=useast load=152 1532569820000000000'
+curl -XPOST "http://localhost:9122/write" -d 'cpu,host=server02,kind=gauge,region=useast load=42 1532569820000000000'
 ```
 
 The exporter also listens on a UDP socket, port 9122 by default.
