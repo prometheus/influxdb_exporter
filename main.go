@@ -63,11 +63,12 @@ var (
 )
 
 type influxDBSample struct {
-	ID        string
-	Name      string
-	Labels    map[string]string
-	Value     float64
-	Timestamp time.Time
+	ID            string
+	Name          string
+	Labels        map[string]string
+	Value         float64
+	Timestamp     time.Time
+	CollectedTime time.Time
 }
 
 func (c *influxDBCollector) serveUdp() {
@@ -170,10 +171,11 @@ func (c *influxDBCollector) parsePointsToSample(points []models.Point) {
 			}
 
 			sample := &influxDBSample{
-				Name:      invalidChars.ReplaceAllString(name, "_"),
-				Timestamp: s.Time(),
-				Value:     value,
-				Labels:    map[string]string{},
+				Name:          invalidChars.ReplaceAllString(name, "_"),
+				Timestamp:     s.Time(),
+				CollectedTime: time.Now(),
+				Value:         value,
+				Labels:        map[string]string{},
 			}
 			for _, v := range s.Tags() {
 				sample.Labels[invalidChars.ReplaceAllString(string(v.Key), "_")] = string(v.Value)
@@ -211,7 +213,7 @@ func (c *influxDBCollector) processSamples() {
 			ageLimit := time.Now().Add(-*sampleExpiry)
 			c.mu.Lock()
 			for k, sample := range c.samples {
-				if ageLimit.After(sample.Timestamp) {
+				if ageLimit.After(sample.CollectedTime) {
 					delete(c.samples, k)
 				}
 			}
@@ -233,7 +235,7 @@ func (c *influxDBCollector) Collect(ch chan<- prometheus.Metric) {
 
 	ageLimit := time.Now().Add(-*sampleExpiry)
 	for _, sample := range samples {
-		if ageLimit.After(sample.Timestamp) {
+		if ageLimit.After(sample.CollectedTime) {
 			continue
 		}
 
