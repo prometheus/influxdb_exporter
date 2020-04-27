@@ -140,6 +140,7 @@ func (c *influxDBCollector) influxDBPost(w http.ResponseWriter, r *http.Request)
 }
 
 func (c *influxDBCollector) parsePointsToSample(points []models.Point) {
+	currentTime := time.Now()
 	for _, s := range points {
 		fields, err := s.Fields()
 		if err != nil {
@@ -173,7 +174,7 @@ func (c *influxDBCollector) parsePointsToSample(points []models.Point) {
 			sample := &influxDBSample{
 				Name:          invalidChars.ReplaceAllString(name, "_"),
 				Timestamp:     s.Time(),
-				CollectedTime: time.Now(),
+				CollectedTime: currentTime,
 				Value:         value,
 				Labels:        map[string]string{},
 			}
