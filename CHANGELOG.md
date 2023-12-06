@@ -1,3 +1,7 @@
+## 0.11.5 / 2023-12-06
+
+* [SECURITY] Maintenance release, updating dependencies and build with Go 1.21
+
 ## 0.11.4 / 2023-06-02
 
 * [SECURITY] Maintenance release, updating dependencies
