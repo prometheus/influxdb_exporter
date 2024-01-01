@@ -15,8 +15,8 @@ github.com/go-logfmt/logfmt v0.6.0/go.mod h1:WYhtIu8zTZfxdn5+rREduYbwxfcBr/Vr6KE
 github.com/golang/protobuf v1.5.0/go.mod h1:FsONVRAS9T7sI+LIUmWTfcYkHO4aIWwzhcaSAoJOfIk=
 github.com/google/go-cmp v0.5.5/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/go-cmp v0.5.9 h1:O2Tfq5qg4qc4AmwVlvv0oLiVAGB7enBSJ2x2DqQFi38=
-github.com/influxdata/influxdb v1.11.2 h1:qOF3uQN1mDfJNEKwbAgJsqehf8IXgKok2vlGm736oGo=
-github.com/influxdata/influxdb v1.11.2/go.mod h1:eUMkLTE2vQwvSk6KGMrTBLKPaqSuczuelGbggigMPFw=
+github.com/influxdata/influxdb v1.11.4 h1:H3pVW+/tWQ4lkHhZxVQ13Ov1hmhHYaAzz8L5aq3ZNtw=
+github.com/influxdata/influxdb v1.11.4/go.mod h1:VO6X2zlamfmEf+Esc9dR+7UQhdE/krspWNEZPwxCrp0=
 github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 h1:jWpvCLoY8Z/e3VKvlsiIGKtc+UG6U5vzxaoagmhXfyg=
 github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0/go.mod h1:QUyp042oQthUoa9bqDv0ER0wrtXnBruoNd7aNjkbP+k=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
