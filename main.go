@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
+	clientVersion "github.com/prometheus/client_golang/prometheus/collectors/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/promlog"
 	"github.com/prometheus/common/promlog/flag"
@@ -328,7 +329,7 @@ func JSONErrorResponse(w http.ResponseWriter, err string, code int) {
 }
 
 func init() {
-	influxDbRegistry.MustRegister(version.NewCollector("influxdb_exporter"))
+	influxDbRegistry.MustRegister(clientVersion.NewCollector("influxdb_exporter"))
 	influxDbRegistry.MustRegister(udpParseErrors)
 }
 
