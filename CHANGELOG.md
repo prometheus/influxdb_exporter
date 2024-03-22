@@ -1,3 +1,7 @@
+## 0.11.6 / 2024-03-22
+
+* [SECURITY] Update dependencies, including google.golang.org/protobuf for CVE-2024-24786
+
 ## 0.11.5 / 2023-12-06
 
 * [SECURITY] Maintenance release, updating dependencies and build with Go 1.21
