@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net"
 	"net/http"
 	"os"
@@ -29,13 +30,11 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	clientVersion "github.com/prometheus/client_golang/prometheus/collectors/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/prometheus/common/promlog"
-	"github.com/prometheus/common/promlog/flag"
+	"github.com/prometheus/common/promslog"
+	"github.com/prometheus/common/promslog/flag"
 	"github.com/prometheus/common/version"
 
 	"github.com/alecthomas/kingpin/v2"
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	"github.com/influxdata/influxdb/models"
 )
 
@@ -91,7 +90,7 @@ func (c *influxDBCollector) serveUdp() {
 	for {
 		n, _, err := c.conn.ReadFromUDP(buf)
 		if err != nil {
-			level.Warn(c.logger).Log("msg", "Failed to read UDP message", "err", err)
+			c.logger.Warn("Failed to read UDP message", "err", err)
 			continue
 		}
 
@@ -101,7 +100,7 @@ func (c *influxDBCollector) serveUdp() {
 		precision := "ns"
 		points, err := models.ParsePointsWithPrecision(bufCopy, time.Now().UTC(), precision)
 		if err != nil {
-			level.Error(c.logger).Log("msg", "Error parsing udp packet", "err", err)
+			c.logger.Error("Error parsing udp packet", "err", err)
 			udpParseErrors.Inc()
 			continue
 		}
@@ -114,13 +113,13 @@ type influxDBCollector struct {
 	samples map[string]*influxDBSample
 	mu      sync.Mutex
 	ch      chan *influxDBSample
-	logger  log.Logger
+	logger  *slog.Logger
 
 	// Udp
 	conn *net.UDPConn
 }
 
-func newInfluxDBCollector(logger log.Logger) *influxDBCollector {
+func newInfluxDBCollector(logger *slog.Logger) *influxDBCollector {
 	c := &influxDBCollector{
 		ch:      make(chan *influxDBSample),
 		samples: map[string]*influxDBSample{},
@@ -180,7 +179,7 @@ func (c *influxDBCollector) parsePointsToSample(points []models.Point) {
 	for _, s := range points {
 		fields, err := s.Fields()
 		if err != nil {
-			level.Error(c.logger).Log("msg", "error getting fields from point", "err", err)
+			c.logger.Error("error getting fields from point", "err", err)
 			continue
 		}
 		for field, v := range fields {
@@ -334,14 +333,14 @@ func init() {
 }
 
 func main() {
-	promlogConfig := &promlog.Config{}
-	flag.AddFlags(kingpin.CommandLine, promlogConfig)
+	promslogConfig := &promslog.Config{}
+	flag.AddFlags(kingpin.CommandLine, promslogConfig)
 	kingpin.HelpFlag.Short('h')
 	kingpin.Parse()
 
-	logger := promlog.New(promlogConfig)
-	level.Info(logger).Log("msg", "Starting influxdb_exporter", "version", version.Info())
-	level.Info(logger).Log("msg", "Build context", "context", version.BuildContext())
+	logger := promslog.New(promslogConfig)
+	logger.Info("Starting influxdb_exporter", "version", version.Info())
+	logger.Info("Build context", "context", version.BuildContext())
 
 	c := newInfluxDBCollector(logger)
 	influxDbRegistry.MustRegister(c)
@@ -396,7 +395,7 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		err := json.NewEncoder(w).Encode(health)
 		if err != nil {
-			level.Warn(logger).Log("failed to encode JSON for health endpoint", err)
+			logger.Warn("failed to encode JSON for health endpoint", "err", err)
 		}
 	})
 
@@ -415,7 +414,7 @@ func main() {
 	})
 
 	if err := http.ListenAndServe(*listenAddress, nil); err != nil {
-		level.Error(logger).Log("msg", "Error starting HTTP server", "err", err)
+		logger.Error("Error starting HTTP server", "err", err)
 		os.Exit(1)
 	}
 }
