@@ -1,12 +1,11 @@
 module github.com/prometheus/influxdb_exporter
 
 go 1.21
-
-toolchain go1.22.0
+toolchain go1.22.5
 
 require (
 	github.com/alecthomas/kingpin/v2 v2.4.0
-	github.com/influxdata/influxdb v1.11.6
+	github.com/influxdata/influxdb v1.11.7
 	github.com/prometheus/client_golang v1.20.4
 	github.com/prometheus/common v0.60.1
 )
