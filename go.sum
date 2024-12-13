@@ -11,8 +11,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=
 github.com/google/go-cmp v0.6.0/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
-github.com/influxdata/influxdb v1.11.6 h1:zS5MRY+RQ5/XFTer5R8xQRnY17JYSbacvO6OaP164wU=
-github.com/influxdata/influxdb v1.11.6/go.mod h1:F10NoQb9qa04lME3pTPWQrYt4JZ/ke1Eei+1ttgHHrg=
+github.com/influxdata/influxdb v1.11.8 h1:lX8MJDfk91O7nqzzonQkjk87gOeQy9V/Xp3gpELhG1s=
+github.com/influxdata/influxdb v1.11.8/go.mod h1:zRTAuk/Ie/V1LGxJUv8jfDmfv+ypz22lxfhc1MxC3rI=
 github.com/klauspost/compress v1.17.9 h1:6KIumPrER1LHsvBVuDa0r5xaG0Es51mhhB9BQB2qeMA=
 github.com/klauspost/compress v1.17.9/go.mod h1:Di0epgTjJY877eYKx5yC51cX2A2Vl2ibi7bDH9ttBbw=
 github.com/kylelemons/godebug v1.1.0 h1:RPNrshWIDI6G2gRW9EHilWtl7Z6Sb1BR0xunSBf0SNc=
