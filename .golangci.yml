@@ -1,6 +1,8 @@
 # Run only staticcheck for now. Additional linters will be enabled one-by-one.
 linters:
+  default: none
   enable:
-  - staticcheck
-  - sloglint
-  disable-all: true
+    - staticcheck
+    - sloglint
+
+version: "2"

@@ -303,10 +303,10 @@ func ReplaceInvalidChars(in *string) {
 
 	for charIndex, char := range *in {
 		charInt := int(char)
-		if !((charInt >= 97 && charInt <= 122) || // a-z
-			(charInt >= 65 && charInt <= 90) || // A-Z
-			(charInt >= 48 && charInt <= 57) || // 0-9
-			charInt == 95) { // _
+		if (charInt < 97 || charInt > 122) && // a-z
+			(charInt < 65 || charInt > 90) && // A-Z
+			(charInt < 48 || charInt > 57) && // 0-9
+			charInt != 95 { // _
 
 			*in = (*in)[:charIndex] + "_" + (*in)[charIndex+1:]
 		}
