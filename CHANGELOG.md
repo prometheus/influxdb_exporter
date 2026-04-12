@@ -1,3 +1,7 @@
+## 0.12.1 / 2026-04-12
+
+* [CHANGE] Rebuild #202
+
 ## 0.12.0 / 2024-10-25
 
 * [CHANGE] Switch logging to slog ([#171](https://github.com/prometheus/influxdb_exporter/pull/171))
