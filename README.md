@@ -1,6 +1,6 @@
 # InfluxDB Exporter [![Build Status](https://travis-ci.org/prometheus/influxdb_exporter.svg)][travis]
 
-[![CircleCI](https://circleci.com/gh/prometheus/influxdb_exporter/tree/master.svg?style=shield)][circleci]
+[![Build Status](https://github.com/prometheus/influxdb_exporter/actions/workflows/ci.yml/badge.svg)](https://github.com/prometheus/influxdb_exporter/actions/workflows/ci.yml)
 [![Docker Repository on Quay](https://quay.io/repository/prometheus/influxdb-exporter/status)][quay]
 [![Docker Pulls](https://img.shields.io/docker/pulls/prom/influxdb-exporter.svg?maxAge=604800)][hub]
 
@@ -80,7 +80,6 @@ InfluxDB V2 Support is currently in progress. Supported features include:
 - Querying for a null result
 - Writing data to the exporter - ignores [auth](https://github.com/prometheus/influxdb_exporter/issues/79) and metadata components (org, buckets)
 
-[circleci]: https://circleci.com/gh/prometheus/influxdb_exporter
 [hub]: https://hub.docker.com/r/prom/influxdb-exporter/
 [travis]: https://travis-ci.org/prometheus/influxdb_exporter
 [quay]: https://quay.io/repository/prometheus/influxdb-exporter
