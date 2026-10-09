@@ -33,6 +33,8 @@ import (
 	"github.com/prometheus/common/promslog"
 	"github.com/prometheus/common/promslog/flag"
 	"github.com/prometheus/common/version"
+	"github.com/prometheus/exporter-toolkit/web"
+	"github.com/prometheus/exporter-toolkit/web/kingpinflag"
 
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/influxdata/influxdb/models"
@@ -43,7 +45,7 @@ const (
 )
 
 var (
-	listenAddress       = kingpin.Flag("web.listen-address", "Address on which to expose metrics and web interface.").Default(":9122").String()
+	toolkitFlags        = kingpinflag.AddFlags(kingpin.CommandLine, ":9122")
 	metricsPath         = kingpin.Flag("web.telemetry-path", "Path under which to expose Prometheus metrics.").Default("/metrics").String()
 	exporterMetricsPath = kingpin.Flag("web.exporter-telemetry-path", "Path under which to expose exporter metrics.").Default("/metrics/exporter").String()
 	sampleExpiry        = kingpin.Flag("influxdb.sample-expiry", "How long a sample is valid for.").Default("5m").Duration()
@@ -413,7 +415,7 @@ func main() {
     </html>`))
 	})
 
-	if err := http.ListenAndServe(*listenAddress, nil); err != nil {
+	if err := web.ListenAndServe(&http.Server{}, toolkitFlags, logger); err != nil {
 		logger.Error("Error starting HTTP server", "err", err)
 		os.Exit(1)
 	}
