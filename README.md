@@ -75,6 +75,13 @@ Or if you want to use UDP instead:
 Note that Telegraf already supports outputting Prometheus metrics over HTTP via
 [`outputs.prometheus_client`][telegraf], which avoids having to also run the influxdb_exporter.
 
+## TLS and basic authentication
+
+The HTTP server supports TLS and basic authentication via the Prometheus exporter-toolkit.
+Pass a configuration file with `--web.config.file`. The format is described
+[in the exporter-toolkit repository](https://github.com/prometheus/exporter-toolkit/blob/master/docs/web-configuration.md).
+Enabling TLS on HTTP does not disable the UDP listener.
+
 ## V2 Support
 InfluxDB V2 Support is currently in progress. Supported features include:
 - Querying for a null result
