@@ -83,7 +83,7 @@ InfluxDB V2 Support is currently in progress. Supported features include:
 [hub]: https://hub.docker.com/r/prom/influxdb-exporter/
 [travis]: https://travis-ci.org/prometheus/influxdb_exporter
 [quay]: https://quay.io/repository/prometheus/influxdb-exporter
-[line_protocol]: https://docs.influxdata.com/influxdb/v0.10/write_protocols/line/
+[line_protocol]: https://docs.influxdata.com/influxdb/v1/write_protocols/line_protocol_reference/
 [graphite_exporter]: https://github.com/prometheus/graphite_exporter
 [collectd_exporter]: https://github.com/prometheus/collectd_exporter
 [node_exporter]: https://github.com/prometheus/node_exporter
