@@ -300,19 +300,29 @@ func (c *influxDBCollector) Describe(ch chan<- *prometheus.Desc) {
 
 // analog of invalidChars = regexp.MustCompile("[^a-zA-Z0-9_]")
 func ReplaceInvalidChars(in *string) {
-
-	for charIndex, char := range *in {
-		charInt := int(char)
-		if (charInt < 97 || charInt > 122) && // a-z
-			(charInt < 65 || charInt > 90) && // A-Z
-			(charInt < 48 || charInt > 57) && // 0-9
-			charInt != 95 { // _
-
-			*in = (*in)[:charIndex] + "_" + (*in)[charIndex+1:]
+	var out []byte
+	for i, char := range *in {
+		if (char >= 'a' && char <= 'z') ||
+			(char >= 'A' && char <= 'Z') ||
+			(char >= '0' && char <= '9') ||
+			char == '_' {
+			if out != nil {
+				out = append(out, byte(char))
+			}
+			continue
 		}
+		// Copy the valid prefix on the first invalid character, then
+		// emit one underscore per rune, however many bytes it spans.
+		if out == nil {
+			out = append(make([]byte, 0, len(*in)), (*in)[:i]...)
+		}
+		out = append(out, '_')
+	}
+	if out != nil {
+		*in = string(out)
 	}
 	// prefix with _ if first char is 0-9
-	if int((*in)[0]) >= 48 && int((*in)[0]) <= 57 {
+	if len(*in) > 0 && (*in)[0] >= '0' && (*in)[0] <= '9' {
 		*in = "_" + *in
 	}
 }

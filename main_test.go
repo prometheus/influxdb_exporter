@@ -15,10 +15,19 @@ package main
 
 import (
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"regexp"
 	"sort"
 	"strings"
 	"testing"
+	"time"
+	"unicode/utf8"
+
+	"github.com/influxdata/influxdb/models"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/common/promslog"
 )
 
 const (
@@ -81,5 +90,65 @@ func BenchmarkStringJoin(b *testing.B) {
 			parts = append(parts, l, labels[l])
 		}
 		strings.Join(parts, ".")
+	}
+}
+
+func TestReplaceInvalidChars(t *testing.T) {
+	for _, tc := range []struct {
+		in   string
+		want string
+	}{
+		{"cpu", "cpu"},
+		{"cpu.load:avg", "cpu_load_avg"},
+		{"9lives", "_9lives"},
+		{"température", "temp_rature"},
+		{"温度", "__"},
+		{"a b\tc", "a_b_c"},
+		{"", ""},
+	} {
+		got := tc.in
+		ReplaceInvalidChars(&got)
+		if got != tc.want {
+			t.Errorf("ReplaceInvalidChars(%q) = %q, want %q", tc.in, got, tc.want)
+		}
+		if !utf8.ValidString(got) {
+			t.Errorf("ReplaceInvalidChars(%q) = %q, which is not valid UTF-8", tc.in, got)
+		}
+	}
+}
+
+func TestNonASCIIPointDoesNotBreakScrape(t *testing.T) {
+	expiry := 5 * time.Minute
+	oldExpiry := sampleExpiry
+	sampleExpiry = &expiry
+	defer func() { sampleExpiry = oldExpiry }()
+
+	c := &influxDBCollector{
+		samples: map[string]*influxDBSample{},
+		ch:      make(chan *influxDBSample, 10),
+		logger:  promslog.NewNopLogger(),
+	}
+	points, err := models.ParsePointsWithPrecision(
+		[]byte("température,zoné=é value=21.5\nplain value=1"), time.Now().UTC(), "ns")
+	if err != nil {
+		t.Fatal(err)
+	}
+	c.parsePointsToSample(points)
+	for range points {
+		s := <-c.ch
+		c.samples[s.ID] = s
+	}
+
+	reg := prometheus.NewRegistry()
+	reg.MustRegister(c)
+	rr := httptest.NewRecorder()
+	promhttp.HandlerFor(reg, promhttp.HandlerOpts{}).ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/metrics", nil))
+	if rr.Code != http.StatusOK {
+		t.Fatalf("scrape returned status %d: %s", rr.Code, rr.Body.String())
+	}
+	for _, want := range []string{"temp_rature{zon_=\"é\"} 21.5", "plain 1"} {
+		if !strings.Contains(rr.Body.String(), want) {
+			t.Errorf("scrape output is missing %q:\n%s", want, rr.Body.String())
+		}
 	}
 }
