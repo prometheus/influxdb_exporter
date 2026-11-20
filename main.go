@@ -161,7 +161,7 @@ func (c *influxDBCollector) influxDBPost(w http.ResponseWriter, r *http.Request)
 
 	precision := "ns"
 	if r.FormValue("precision") != "" {
-		precision = r.FormValue("precision")
+		precision = normalizePrecision(r.FormValue("precision"))
 	}
 	points, err := models.ParsePointsWithPrecision(buf, time.Now().UTC(), precision)
 	if err != nil {
@@ -173,6 +173,17 @@ func (c *influxDBCollector) influxDBPost(w http.ResponseWriter, r *http.Request)
 
 	// InfluxDB returns a 204 on success.
 	http.Error(w, "", http.StatusNoContent)
+}
+
+// normalizePrecision maps the precision values of the InfluxDB 2.x write API
+// to the ones understood by the 1.x line protocol parser, which treats any
+// unknown value as nanoseconds.
+func normalizePrecision(precision string) string {
+	switch precision {
+	case "us":
+		return "u"
+	}
+	return precision
 }
 
 func (c *influxDBCollector) parsePointsToSample(points []models.Point) {
